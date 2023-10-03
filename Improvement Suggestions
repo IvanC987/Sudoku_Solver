@@ -1,0 +1,19 @@
+Two modes of solving. One is using pynput that controls keyboard, This allow users to
+interact with other websites as well. The other mode of solving is directly using pygame.
+This would have lower chance of messing up, ie user accidentally clicked outside the box
+
+Two modes. Solve a given puzzle and generate a puzzle that can also be solved
+Use beatiful soup to webscrape to generate puzzles. Ask GPT and search if allowed
+
+If asked to solve, Error handling, checks if the entered puzzle is valid before solving, can
+use leetcode's solution.
+
+Create a backup where the console prints "Error with API occurred. Now using backup" if something
+when wrong with the API. Self create a sudoku puzzle, for single diffiuculty. Probably easy.
+
+Change pygame window's icon and change its title
+
+Add proper documentations for everything- Do it last!
+
+
+add a "readme" file and commit it on github
