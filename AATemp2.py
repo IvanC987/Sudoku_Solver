@@ -7,7 +7,6 @@ from console import Console
 from sudoku_solver import solve, valid_grid
 from puzzle_generator import generate_puzzle
 
-
 """
 Sudoku Game
 
@@ -26,7 +25,6 @@ Full discussion can be found here
 https://stackoverflow.com/questions/69711836/pyautogui-changing-my-window-size-when-i-import-it
 """
 
-
 # Remember to add ICON IMAGE AND TITLE!
 DEFAULT_GRID = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -40,11 +38,9 @@ DEFAULT_GRID = [
     [0, 4, 9, 2, 0, 6, 0, 0, 7]
 ]
 
-
 grid = [i[:] for i in DEFAULT_GRID]
 answer = solve(DEFAULT_GRID)
 placed_notes = [[[0 for _ in range(9)] for _ in range(9)] for _ in range(9)]
-
 
 # Can be shortened but looks better like this but personally, I think this looks better
 # Purpose of this 2d list is that it holds the coordinates of the centered cell
@@ -60,7 +56,6 @@ centered_coords = [
     [23, 77, 132, 190, 245, 299, 358, 413, 466, 394],
     [23, 77, 132, 190, 245, 299, 358, 413, 466, 450],
 ]
-
 
 # Scroll speed controls the scrolling rate
 # Both content_x and y are used in the calc_grid_pos function. Content_y is also used with the scroll_speed variable
@@ -82,17 +77,18 @@ difficulty = 0
 note = False
 gen_click_time = 0
 mode = 0
+complete = False
 levels = ["Easy", "Medium", "Hard"]  # Use mod 3 to get the difficulty
-
 
 # First, initialize the pygame window
 # Then, display the screen, set caption, and also creating the font that would be used in this project
 py.init()
 screen = py.display.set_mode(screen_size, py.RESIZABLE)
 py.display.set_caption("Sudoku Project")
-font1 = py.font.SysFont("comicsans", 40)
-font2 = py.font.SysFont("verdana", 20)
-font3 = py.font.SysFont("comicsans", 15)
+font1 = py.font.SysFont("comicsans", 40)  # This is for general purpose, used mainly for grid values
+font2 = py.font.SysFont("verdana", 20)  # This is for Button's Label
+font3 = py.font.SysFont("comicsans", 15)  # This is for the "Note" button
+font4 = py.font.SysFont("verdana", 15)  # This is for console text
 
 
 def calculate_grid_position() -> tuple:
@@ -106,10 +102,18 @@ def calculate_grid_position() -> tuple:
     screen_center_y = screen.get_height() // 2
 
     # Calculate the position of the grid based on screen size
-    grid_x = screen_center_x - ((cell_size*9)//2) - content_x
-    grid_y = screen_center_y - ((cell_size*9)//2) - content_y
+    grid_x = screen_center_x - ((cell_size * 9) // 2) - content_x
+    grid_y = screen_center_y - ((cell_size * 9) // 2) - content_y
 
     return grid_x, grid_y
+
+
+initial_x, initial_y = calculate_grid_position()
+
+# Creating the Console, Note, Solve, Generate, and Mode button
+console = Console(screen, centered_coords[2][0] - 250 + initial_x, centered_coords[2][-1] + initial_y, 200,
+                  cell_size * 5, font4)
+console.add_message("Welcome to this project!")
 
 
 def draw_value(x_val: int, y_val: int, val: int, default: int) -> None:
@@ -146,17 +150,17 @@ def highlight_cells(row: int, column: int) -> None:
     ]
 
     # Highlights the column
-    py.draw.rect(screen, color, py.Rect(column*cell_size+grid_x+7, top+grid_y-47, width, height), cell_size)
+    py.draw.rect(screen, color, py.Rect(column * cell_size + grid_x + 7, top + grid_y - 47, width, height), cell_size)
 
     # Highlights the row
-    py.draw.rect(screen, color, py.Rect(top+grid_x-47, row * cell_size + grid_y + 7, height, width), cell_size)
+    py.draw.rect(screen, color, py.Rect(top + grid_x - 47, row * cell_size + grid_y + 7, height, width), cell_size)
 
     coordinate = sub_coordinates[(row // 3)][(column // 3)]
     # Highlights the sub grid
-    py.draw.rect(screen, color, py.Rect(coordinate[0]+grid_x, coordinate[1] + grid_y, sub_size, sub_size), sub_size)
+    py.draw.rect(screen, color, py.Rect(coordinate[0] + grid_x, coordinate[1] + grid_y, sub_size, sub_size), sub_size)
 
     # Color current cell differently
-    py.draw.rect(screen, "#0300FF", py.Rect(column*cell_size + grid_x + 7, row*cell_size + grid_y + 7,
+    py.draw.rect(screen, "#0300FF", py.Rect(column * cell_size + grid_x + 7, row * cell_size + grid_y + 7,
                                             cell_size, cell_size), cell_size)
 
 
@@ -171,7 +175,7 @@ def is_solved(expected: list[list[int]], given: list[list[int]]) -> bool:
 
 def automate(puzzle: list[list[int]], row, column, left, right) -> list:
     keyboard = Controller()
-    time.sleep(0.05)
+    time.sleep(0.02)
 
     if left:
         if column != 0:
@@ -202,20 +206,27 @@ def automate(puzzle: list[list[int]], row, column, left, right) -> list:
 
 def create_buttons():
     global DEFAULT_GRID, answer, placed_notes, grid, value, x_click, y_click, now_solve, \
-        auto_row, auto_column, move_left, move_right, gen_click_time, note, difficulty, mode
+        auto_row, auto_column, move_left, move_right, gen_click_time, note, difficulty, mode, complete
+
     grid_x, grid_y = calculate_grid_position()
-    # Creating the Console, Note, Solve, Generate, and Mode button
-    console = Console(screen, centered_coords[2][0] - 250 + grid_x, centered_coords[2][-1] + grid_y, 200,
-                      cell_size*5, font2)
-    console.draw()
-    console.add_message("Temp", "black")
+
+    console.draw(centered_coords[2][0] - 250 + grid_x, centered_coords[2][-1] + grid_y)
+
+    clear_b = Button(screen, centered_coords[2][0] - 250 + grid_x + console.width // 4,
+                     centered_coords[2][-1] + grid_y + console.height * 1.1, 100, 40)
+    clear_b.draw("#7E84F7")
+    clear_b.add_text(font2, text="Clear", x_shift=25, y_shift=6)
+    if clear_b.clicked(x_click - x_offset, y_click - y_offset):
+        console.clear_message()
+        console.add_message("Clear button clicked")
+        x_click = 0
 
     note_b = Button(screen, centered_coords[0][0] + grid_x, centered_coords[-1][-1] + grid_y + 100, 100, 40)
     note_b.draw("#7E84F7")
     note_b.add_text(font2, text="Note", x_shift=27, y_shift=6)
     if note_b.clicked(x_click - x_offset, y_click - y_offset):
         note = False if note else True
-        print(f"Note is now {note}")
+        console.add_message(f"Note is now {note}")
         x_click = 0
 
     solve_b = Button(screen, centered_coords[0][2] + grid_x + 13, centered_coords[-1][-1] + grid_y + 100, 100, 40)
@@ -229,20 +240,18 @@ def create_buttons():
         if mode % 2 == 1:
             check = valid_grid(grid)
             if not check:
-                print("Invalid puzzle. Try again")
+                console.add_message("Invalid puzzle. Try again")
                 go = False
                 x_click = 0
             temp = solve(grid)
-            print("passed solve method")  # Solve can take a couple seconds. Tell user to wait
             if temp == [[]]:
-                print("This puzzle have no solution. Try another one")
+                console.add_message("This puzzle have no solution. Try another one")
                 go = False
                 x_click = 0
             answer = temp
         if go:
-            for starting in range(3, -1, -1):
-                time.sleep(1)
-                print(f"Starting in {starting}")
+            time.sleep(0.5)
+            console.add_message("Now solving")
             x_click = centered_coords[0][0] + grid_x
             y_click = centered_coords[0][-1] + grid_y
             now_solve = True
@@ -250,25 +259,27 @@ def create_buttons():
     generate_b = Button(screen, centered_coords[0][4] + grid_x + 21, centered_coords[-1][-1] + grid_y + 100, 100, 40)
     generate_b.draw("#7E84F7")
     generate_b.add_text(font2, text="Generate", x_shift=3, y_shift=6)
-    if generate_b.clicked(x_click - x_offset, y_click - y_offset) and time.time()-gen_click_time < 0.2:
+    if generate_b.clicked(x_click - x_offset, y_click - y_offset) and time.time() - gen_click_time < 0.2:
         difficulty += 1
-        print(f"Generate Clicked, difficulty is now {levels[difficulty % 3]}")
+        console.add_message(f"Generate Clicked, difficulty is now {levels[difficulty % 3]}")
         DEFAULT_GRID = generate_puzzle(levels[difficulty % 3])
         grid = [i[:] for i in DEFAULT_GRID]
         answer = solve(DEFAULT_GRID)
         placed_notes = [[[0 for _ in range(9)] for _ in range(9)] for _ in range(9)]
         x_click = 0
+        complete = False
     elif generate_b.clicked(x_click - x_offset, y_click - y_offset):
-        if abs(gen_click_time - time.time()) < 3:
-            print("Please wait a few seconds before generation")
+        if abs(gen_click_time - time.time()) < 1:
+            console.add_message("Please wait 1s before generation")
         else:
             gen_click_time = time.time()
             DEFAULT_GRID = generate_puzzle(levels[difficulty % 3])
             grid = [i[:] for i in DEFAULT_GRID]
             answer = solve(DEFAULT_GRID)
             placed_notes = [[[0 for _ in range(9)] for _ in range(9)] for _ in range(9)]
-            print("Generate Button Clicked")
+            console.add_message("New puzzle generated")
         x_click = 0
+        complete = False
 
     # mode = 1 Use this variable to keep track and switch between modes!
     mode_b = Button(screen, centered_coords[0][6] + grid_x + 29, centered_coords[-1][-1] + grid_y + 100, 100, 40)
@@ -276,6 +287,7 @@ def create_buttons():
     mode_b.add_text(font2, text="Mode", x_shift=24, y_shift=6)
     if mode_b.clicked(x_click - x_offset, y_click - y_offset):
         mode += 1
+        complete = False
         if mode % 2 == 1:
             DEFAULT_GRID = [
                 [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -290,13 +302,13 @@ def create_buttons():
             ]
             grid = [i[:] for i in DEFAULT_GRID]
             placed_notes = [[[0 for _ in range(9)] for _ in range(9)] for _ in range(9)]
-            print("Now in mode 1")
+            console.add_message("Now in mode 1")
         else:
             DEFAULT_GRID = generate_puzzle(levels[difficulty % 3])
             grid = [i[:] for i in DEFAULT_GRID]
             answer = solve(DEFAULT_GRID)
             placed_notes = [[[0 for _ in range(9)] for _ in range(9)] for _ in range(9)]
-            print("Now in mode 0")
+            console.add_message("Now in mode 0")
         x_click = 0
 
 
@@ -307,6 +319,8 @@ def background() -> None:
 
     :return: None
     """
+    global complete
+
     screen.fill(py.Color("white"))
 
     # Calculate the grid position
@@ -316,15 +330,15 @@ def background() -> None:
         highlight_cells(highlight[1], highlight[2])
 
     # Reason why py.Rect() has +10 is so that it lines up evenly. Remove and notice the difference
-    py.draw.rect(screen, py.Color("black"), py.Rect(grid_x, grid_y, cell_size*9 + 10, cell_size*9 + 10), 10)
+    py.draw.rect(screen, py.Color("black"), py.Rect(grid_x, grid_y, cell_size * 9 + 10, cell_size * 9 + 10), 10)
     count = 0
     # The cells would have dimensions of 56x56 pixels
-    while (count * cell_size) < cell_size*9:
+    while (count * cell_size) < cell_size * 9:
         line_width = 3 if count % 3 != 0 else 7
         py.draw.line(screen, py.Color("black"), py.Vector2((count * cell_size) + grid_x + 5, grid_y),
-                     py.Vector2((count * cell_size) + grid_x + 5, cell_size*9 + grid_y), line_width)
+                     py.Vector2((count * cell_size) + grid_x + 5, cell_size * 9 + grid_y), line_width)
         py.draw.line(screen, py.Color("black"), py.Vector2(grid_x, (count * cell_size) + grid_y + 5),
-                     py.Vector2(cell_size*9 + grid_x, (count * cell_size) + grid_y + 5), line_width)
+                     py.Vector2(cell_size * 9 + grid_x, (count * cell_size) + grid_y + 5), line_width)
         count += 1
 
     # Call to create the buttons
@@ -341,8 +355,9 @@ def background() -> None:
             else:
                 count += 1
 
-    if count == 0 and valid_grid(grid):
-        print("Grid complete!")
+    if count == 0 and valid_grid(grid) and not complete:
+        console.add_message("Grid complete!")
+        complete = True
 
     for i in range(9):
         for j in range(9):
@@ -350,9 +365,9 @@ def background() -> None:
                 continue
             count = 0
             for k in range(1, 10):
-                if placed_notes[i][j][k-1] != 0:
+                if placed_notes[i][j][k - 1] != 0:
                     draw_value(centered_coords[i][j] + grid_x - 9 + (count % 3) * 15,
-                               centered_coords[i][-1] + grid_y + 3 + (count // 3) * 15, placed_notes[i][j][k-1], 2)
+                               centered_coords[i][-1] + grid_y + 3 + (count // 3) * 15, placed_notes[i][j][k - 1], 2)
                 count += 1
 
 
@@ -420,8 +435,8 @@ def loop() -> None:
     # First, find the coordinate of the upper-left part of the grid
     temp_x, temp_y = calculate_grid_position()
     # Checks if the user clicked within the grid
-    if centered_coords[0][0]-30 <= (x_click - temp_x) <= centered_coords[0][-2] + 30 \
-            and centered_coords[0][-1]-25 <= (y_click - temp_y) <= centered_coords[-1][-1]+25:
+    if centered_coords[0][0] - 30 <= (x_click - temp_x) <= centered_coords[0][-2] + 30 \
+            and centered_coords[0][-1] - 25 <= (y_click - temp_y) <= centered_coords[-1][-1] + 25:
         highlight[0] = True
         for i in range(0, 9):
             if centered_coords[i][-1] - 30 <= (y_click - temp_y):
@@ -430,7 +445,7 @@ def loop() -> None:
                 y = i
         highlight[1:] = [x, y]
         if value != -1 and DEFAULT_GRID[x][y] == 0 and note:
-            placed_notes[x][y][value-1] = value
+            placed_notes[x][y][value - 1] = value
             value = -1
         elif value != -1 and DEFAULT_GRID[x][y] == 0:
             # After iteration, it changes the value at that location, which would be reflected on the window

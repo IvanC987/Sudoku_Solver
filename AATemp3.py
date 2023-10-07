@@ -1,22 +1,49 @@
-from sudoku_solver import solve
-from time import time
 
-# a = [
-#     [0, 0, 7, 6, 0, 5, 9, 4, 0],
-#     [0, 0, 0, 0, 0, 0, 0, 0, 6],
-#     [8, 0, 0, 1, 0, 0, 0, 0, 0],
-#     [0, 0, 0, 0, 0, 0, 2, 0, 0],
-#     [0, 7, 0, 0, 9, 0, 0, 0, 0],
-#     [0, 0, 9, 0, 0, 4, 5, 3, 0],
-#     [0, 1, 0, 5, 0, 0, 3, 6, 0],
-#     [0, 0, 0, 0, 0, 6, 0, 0, 7],
-#     [0, 0, 3, 0, 0, 0, 0, 0, 2],
-# ]
-#
-# r = solve(a)
-# print(a)
+class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
 
-a = [0 for i in range(9)]
 
-result = [a*9]
-print(result)
+
+# g = ListNode(2)
+# f = ListNode(5, g)
+# e = ListNode(2)
+d = ListNode(1)
+c = ListNode(0, d)
+b = ListNode(3, c)
+a = ListNode(1, b)
+
+def partition(head, x: int):
+    if head is None:
+        return
+
+    dummy = ListNode(0, head)
+    p1 = dummy
+    p2 = dummy.next
+    start = None
+    prev = None
+
+    while p2 is not None:
+        if start is None and p2.val >= x:
+            start = p2
+            prev = p1
+        elif start is not None and p2.val < x:
+            prev.next = p2
+            prev = prev.next
+            p1.next = p2.next
+            p1 = p2
+            p2 = p2.next
+        else:
+            p1 = p1.next
+            p2 = p2.next
+
+    prev.next = start
+    return dummy.next
+
+
+r = partition(a, 3)
+while r is not None:
+    print(r.val)
+    r = r.next
+
