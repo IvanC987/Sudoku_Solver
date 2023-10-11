@@ -2,9 +2,11 @@ import time
 from pynput.keyboard import Controller, Key
 
 
-# This algorithm allows you to automate solving sudoku on websites that allows the
-# left-right-up-down along with the numerical number key bindings such as
-# Sudoku.com
+"""
+This file contain multiple functions, of which, "solve" and "valid_grid" is used by the main file, sudoku_gui.py
+The remaining functions are used for testing/other purposes
+"""
+
 grid = [
     [0, 0, 0, 2, 0, 7, 0, 0, 4],
     [9, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -138,10 +140,10 @@ def solve(puzzle: list[list[int]]) -> list[list[int]]:
 
 
 if __name__ == "__main__":
-    result = solve(grid)
-    for i in result:
-        print(i)
-    for i in range(3, -1, -1):
-        print("Starting in " + str(i))
+    t1 = solve(grid)
+    for rows in t1:
+        print(rows)
+    for second in range(3, -1, -1):
+        print("Starting in " + str(second))
         time.sleep(1)
-    automate(result)
+    automate(t1)

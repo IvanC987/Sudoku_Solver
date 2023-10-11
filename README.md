@@ -2,6 +2,7 @@
 This program has 5 main files. <br>
 1. sudoku_gui.py- <br>
 This is where the main program is at, consisting of the GUI along with the required functions needed to run this project
+Run this file to start the Sudoku Program
 2. sudoku_solver.py- <br>
 This python file contains two methods using within the main file. "solve" and "valid_grid" 
 The former solves a given sudoku_puzzle, return [[]] if it's invalid, while the latter returns a boolean value when 
@@ -62,6 +63,13 @@ This function checks if the puzzle is now solved
 This function is the core of the "Solve" button. It takes in several parameters and fills in the grid according to the 
 "answer" variable, which contains the fully solved puzzle
 6. create_buttons()-
-This function, as indicated by its name, 
+This function, as indicated by its name, creates/draws the buttons on the interface
 7. background()-
+This function draws the main background of this interface, including the grid and function call draw_values
 8. loop()-
+This function mainly handle keyboard events and continuously loops as long as the user does not exit the program.
+
+
+
+Note- Please make sure to use this program as intended. Such as not clicking on "Solve" multiple times while
+the puzzle is being solved, or clicking elsewhere on the screen while the puzzle is being solved. 
